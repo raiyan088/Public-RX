@@ -4,7 +4,7 @@ const express = require('express')
 
 let mJobSolve = 0
 
-let mJobTime = new Date().getTime()+10000
+let mJobTime = new Date().getTime()+5000
 
 const app = express()
 
@@ -43,9 +43,26 @@ app.post('/job', function (req, res) {
     } else {
         setTimeout(() => {
             res.end(JSON.stringify({ status:'BAD', msg:'Job Runing' }))
-        }, 10000)
+        }, 5000)
     }
 })
+
+app.post('/job_v', function (req, res) {
+    if (mJobTime < new Date().getTime()) {
+        if(req.body) {
+            mJobTime = new Date().getTime()+9000
+            solveJob(res, decrypt(req.body.data))
+        } else {
+            mJobTime = 0
+            res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
+        }
+    } else {
+        setTimeout(() => {
+            res.end(JSON.stringify({ status:'BAD', msg:'Job Runing' }))
+        }, 5000)
+    }
+})
+
 
 function zeroPad(num, places) {
     var zero = places - num.toString().length + 1;
