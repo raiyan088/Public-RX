@@ -4,7 +4,7 @@ const express = require('express')
 
 let mJobSolve = 0
 
-let mJobTime = new Date().getTime()+5000
+let mJobTime = new Date().getTime()+3000
 
 const app = express()
 
@@ -32,34 +32,23 @@ app.get('/', async (req, res) => {
 })
 
 app.post('/job', function (req, res) {
-    if (mJobTime < new Date().getTime()) {
-        if(req.body) {
-            mJobTime = new Date().getTime()+28000
-            solveJob(res, decrypt(req.body.data))
+    try {
+        if (mJobTime < new Date().getTime()) {
+            if(req.body) {
+                let timeout = parseInt(req.body.timeout)
+                mJobTime = new Date().getTime()+timeout
+                solveJob(res, decrypt(req.body.data), parseInt(timeout/1000))
+            } else {
+                mJobTime = 0
+                res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
+            }
         } else {
-            mJobTime = 0
-            res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
+            setTimeout(() => {
+                res.end(JSON.stringify({ status:'BAD', msg:'Job Runing' }))
+            }, 5000)
         }
-    } else {
-        setTimeout(() => {
-            res.end(JSON.stringify({ status:'BAD', msg:'Job Runing' }))
-        }, 5000)
-    }
-})
-
-app.post('/job_v', function (req, res) {
-    if (mJobTime < new Date().getTime()) {
-        if(req.body) {
-            mJobTime = new Date().getTime()+9000
-            solveJob(res, decrypt(req.body.data))
-        } else {
-            mJobTime = 0
-            res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
-        }
-    } else {
-        setTimeout(() => {
-            res.end(JSON.stringify({ status:'BAD', msg:'Job Runing' }))
-        }, 5000)
+    } catch (error) {
+        res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
     }
 })
 
@@ -81,7 +70,7 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-async function solveJob(res, job) {
+async function solveJob(res, job, devide) {
     try {
         let mJob = JSON.parse(job)
         let target = hex2int(mJob.target)
@@ -107,6 +96,7 @@ async function solveJob(res, job) {
                         mNonce.push(hexnonce)
                         mHash.push(hash)
                         mJobSolve++
+                        break
                     }
                 }
             } catch (error) {}
@@ -114,12 +104,12 @@ async function solveJob(res, job) {
 
         if (mSolve) {
             if (mHash.length > 0) {
-                res.end(JSON.stringify({ status:'SOLVED', hash:parseInt(hashSolved/28), msg:encrypt(JSON.stringify({ id:mJob.job_id, nonce:mNonce, hash:mHash })) }))
+                res.end(JSON.stringify({ status:'SOLVED', hash:parseInt(hashSolved/devide), msg:encrypt(JSON.stringify({ id:mJob.job_id, nonce:mNonce, hash:mHash })) }))
             } else {
-                res.end(JSON.stringify({ status:'OK', hash:parseInt(hashSolved/28), msg:'No Solved' }))
+                res.end(JSON.stringify({ status:'OK', hash:parseInt(hashSolved/devide), msg:'No Solved' }))
             }
         } else {
-            res.end(JSON.stringify({ status:'HASH', hash:parseInt(hashSolved/28), msg:'No Hash' }))
+            res.end(JSON.stringify({ status:'HASH', hash:parseInt(hashSolved/devide), msg:'No Hash' }))
         }
     } catch (error) {
         mJobTime = 0
