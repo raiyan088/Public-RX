@@ -49,6 +49,19 @@ app.post('/job', async function (req, res) {
     }
 })
 
+app.post('/test', async function (req, res) {
+    try {
+        if(req.body) {
+            let data = await delay(parseInt(req.body.timeout))
+            res.end(JSON.stringify({ status:'SUCCESS', msg:'OK' }))
+        } else {
+            res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
+        }
+    } catch (error) {
+        res.end(JSON.stringify({ status:'BAD', msg:'Error' }))
+    }
+})
+
 
 function zeroPad(num, places) {
     var zero = places - num.toString().length + 1;
